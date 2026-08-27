@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client
 from google import genai
+import resend
 import json
 
 st.set_page_config(
@@ -20,6 +21,8 @@ supabase = create_client(
 client = genai.Client(
     api_key=st.secrets["GEMINI_API_KEY"]
 )
+
+resend.api_key = st.secrets["RESEND_API_KEY"]
 
 # -------------------------
 # Page
@@ -52,7 +55,10 @@ if submitted:
     else:
 
         try:
-            # Ask Gemini to qualify the lead
+            # -------------------------
+            # AI qualification
+            # -------------------------
+
             prompt = f"""
 You are an AI sales qualification assistant.
 
@@ -92,8 +98,11 @@ Rules:
             qualified = bool(ai_result["qualified"])
             ai_reason = ai_result["ai_reason"]
 
-            # Save lead + AI analysis to Supabase
-            supabase.table("leads").insert({
+            # -------------------------
+            # Save lead to Supabase
+            # -------------------------
+
+            result = supabase.table("leads").insert({
                 "name": name,
                 "email": email,
                 "company": company,
@@ -106,15 +115,67 @@ Rules:
                 "notification_sent": False
             }).execute()
 
-            # Display result
+            # -------------------------
+            # Send notification
+            # -------------------------
+
+            notification_sent = False
+
+            if priority == "High":
+
+                resend.Emails.send({
+                    "from": "AI Sales CRM <onboarding@resend.dev>",
+                    "to": [st.secrets["SALES_TEAM_EMAIL"]],
+                    "subject": f"🔥 High-Priority Lead: {company}",
+                    "html": f"""
+                    <h2>🔥 New High-Priority Lead</h2>
+
+                    <p><strong>Name:</strong> {name}</p>
+                    <p><strong>Email:</strong> {email}</p>
+                    <p><strong>Company:</strong> {company}</p>
+
+                    <p><strong>Lead Score:</strong> {score}/100</p>
+                    <p><strong>Qualified:</strong> {"Yes" if qualified else "No"}</p>
+
+                    <h3>Lead Message</h3>
+                    <p>{message}</p>
+
+                    <h3>AI Reason</h3>
+                    <p>{ai_reason}</p>
+
+                    <p>Please follow up with this lead as soon as possible.</p>
+                    """
+                })
+
+                notification_sent = True
+
+            # -------------------------
+            # Update notification status
+            # -------------------------
+
+            if notification_sent:
+
+                supabase.table("leads").update({
+                    "notification_sent": True
+                }).eq("email", email).execute()
+
+            # -------------------------
+            # Display results
+            # -------------------------
+
             st.success("Lead submitted successfully! 🎉")
 
             st.subheader("🤖 AI Qualification")
 
             st.write(f"**Score:** {score}/100")
             st.write(f"**Priority:** {priority}")
-            st.write(f"**Qualified:** {'Yes' if qualified else 'No'}")
+            st.write(
+                f"**Qualified:** {'Yes' if qualified else 'No'}"
+            )
             st.write(f"**AI Reason:** {ai_reason}")
+
+            if notification_sent:
+                st.success("📧 High-priority notification sent!")
 
         except Exception as e:
             st.error(f"Error: {e}")
