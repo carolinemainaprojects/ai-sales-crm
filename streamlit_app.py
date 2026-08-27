@@ -1,8 +1,15 @@
 import streamlit as st
+from supabase import create_client
 
 st.set_page_config(
     page_title="AI Sales CRM",
     page_icon="🤖"
+)
+
+# Connect to Supabase
+supabase = create_client(
+    st.secrets["SUPABASE_URL"],
+    st.secrets["SUPABASE_KEY"]
 )
 
 st.title("🤖 AI Sales CRM")
@@ -20,4 +27,15 @@ with st.form("lead_form"):
         if not name or not email or not message:
             st.warning("Please fill in your name, email, and message.")
         else:
-            st.success("Thank you! Your lead has been submitted.")
+            try:
+                supabase.table("leads").insert({
+                    "name": name,
+                    "email": email,
+                    "company": company,
+                    "message": message
+                }).execute()
+
+                st.success("Thank you! Your lead has been submitted.")
+
+            except Exception as e:
+                st.error("Something went wrong. Please try again.")
