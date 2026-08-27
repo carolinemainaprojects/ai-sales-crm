@@ -34,11 +34,17 @@ if submitted:
     else:
         try:
             response = supabase.table("leads").insert({
-                "name": name,
-                "email": email,
-                "company": company,
-                "message": message
-            }).execute()
+    "name": name,
+    "email": email,
+    "company": company,
+    "message": message,
+    "status": "new",
+    "priority": "medium",
+    "score": 0,
+    "ai_reason": "",
+    "qualified": False,
+    "notification_sent": False
+}).execute()
 
             st.success("Lead submitted successfully! 🎉")
             st.write(response)
