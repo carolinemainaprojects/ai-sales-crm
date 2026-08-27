@@ -47,11 +47,8 @@ st.header("📝 Submit a New Lead")
 with st.form("lead_form"):
 
     name = st.text_input("Name")
-
     email = st.text_input("Email")
-
     company = st.text_input("Company")
-
     message = st.text_area("Message")
 
     submitted = st.form_submit_button("Submit Lead")
@@ -109,29 +106,34 @@ Rules:
             ai_result = json.loads(response.text)
 
             score = int(ai_result["score"])
-
             priority = ai_result["priority"]
-
             qualified = bool(ai_result["qualified"])
-
             ai_reason = ai_result["ai_reason"]
 
             # -------------------------
             # Save Lead
             # -------------------------
 
-            supabase.table("leads").insert({
-                "name": name,
-                "email": email,
-                "company": company,
-                "message": message,
-                "status": "new",
-                "priority": priority,
-                "score": score,
-                "ai_reason": ai_reason,
-                "qualified": qualified,
-                "notification_sent": False
-            }).execute()
+            insert_response = (
+                supabase
+                .table("leads")
+                .insert({
+                    "name": name,
+                    "email": email,
+                    "company": company,
+                    "message": message,
+                    "status": "new",
+                    "priority": priority,
+                    "score": score,
+                    "ai_reason": ai_reason,
+                    "qualified": qualified,
+                    "notification_sent": False
+                })
+                .execute()
+            )
+
+            # Get the exact lead ID
+            lead_id = insert_response.data[0]["id"]
 
             # -------------------------
             # Email Notification
@@ -154,25 +156,15 @@ Rules:
                     "html": f"""
                     <h2>🔥 New High-Priority Lead</h2>
 
-                    <p>
-                    <strong>Name:</strong> {name}
-                    </p>
+                    <p><strong>Name:</strong> {name}</p>
 
-                    <p>
-                    <strong>Email:</strong> {email}
-                    </p>
+                    <p><strong>Email:</strong> {email}</p>
 
-                    <p>
-                    <strong>Company:</strong> {company}
-                    </p>
+                    <p><strong>Company:</strong> {company}</p>
 
-                    <p>
-                    <strong>Lead Score:</strong> {score}/100
-                    </p>
+                    <p><strong>Lead Score:</strong> {score}/100</p>
 
-                    <p>
-                    <strong>Priority:</strong> {priority}
-                    </p>
+                    <p><strong>Priority:</strong> {priority}</p>
 
                     <p>
                     <strong>Qualified:</strong>
@@ -196,18 +188,16 @@ Rules:
                 notification_sent = True
 
             # -------------------------
-            # Update Notification Status
+            # Update Exact Lead
             # -------------------------
 
             if notification_sent:
 
                 supabase.table("leads").update({
-
                     "notification_sent": True
-
                 }).eq(
-                    "email",
-                    email
+                    "id",
+                    lead_id
                 ).execute()
 
             # -------------------------
@@ -265,7 +255,7 @@ Rules:
 
 st.divider()
 
-st.header("📊 CRM Dashboard")
+st.header("📊 Sales CRM Dashboard")
 
 try:
 
@@ -285,7 +275,7 @@ try:
     if leads:
 
         # -------------------------
-        # Dashboard Metrics
+        # Metrics
         # -------------------------
 
         total_leads = len(leads)
@@ -327,19 +317,16 @@ try:
         ]
 
         average_score = (
-
             round(
                 sum(scores) / len(scores),
                 1
             )
-
             if scores
-
             else 0
         )
 
         # -------------------------
-        # Metrics Row
+        # Main Metrics
         # -------------------------
 
         col1, col2, col3, col4 = st.columns(4)
@@ -390,7 +377,8 @@ try:
         )
 
         st.write(
-            f"📧 **Notifications Sent:** {notifications_sent}"
+            f"📧 **Notifications Sent:** "
+            f"{notifications_sent}"
         )
 
         st.divider()
@@ -418,11 +406,8 @@ try:
         else:
 
             filtered_leads = [
-
                 lead
-
                 for lead in leads
-
                 if lead.get("priority")
                 == priority_filter
             ]
@@ -470,12 +455,10 @@ try:
             )
 
             with st.expander(
-
                 f"{priority_icon} "
                 f"{lead_name} — "
                 f"{lead_company} — "
                 f"{lead_score}/100"
-
             ):
 
                 col1, col2 = st.columns(2)
@@ -500,26 +483,17 @@ try:
                 with col2:
 
                     qualified_status = (
-
                         "Yes ✅"
-
                         if lead.get("qualified")
-                        else
-
-                        "No ❌"
+                        else "No ❌"
                     )
 
                     notification_status = (
-
                         "Sent 📧"
-
                         if lead.get(
                             "notification_sent"
                         )
-
-                        else
-
-                        "Not sent"
+                        else "Not sent"
                     )
 
                     st.write(
@@ -565,3 +539,4 @@ except Exception as e:
     st.error(
         f"Dashboard error: {e}"
             )
+                
