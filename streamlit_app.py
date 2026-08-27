@@ -179,3 +179,70 @@ Rules:
 
         except Exception as e:
             st.error(f"Error: {e}")
+# -------------------------
+# CRM Dashboard
+# -------------------------
+
+st.divider()
+
+st.header("📊 CRM Dashboard")
+
+try:
+    leads_response = (
+        supabase
+        .table("leads")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    leads = leads_response.data
+
+    if leads:
+
+        # Dashboard metrics
+        total_leads = len(leads)
+
+        high_priority = sum(
+            1 for lead in leads
+            if lead.get("priority") == "High"
+        )
+
+        qualified_leads = sum(
+            1 for lead in leads
+            if lead.get("qualified") is True
+        )
+
+        scores = [
+            lead.get("score", 0)
+            for lead in leads
+            if lead.get("score") is not None
+        ]
+
+        average_score = (
+            round(sum(scores) / len(scores), 1)
+            if scores else 0
+        )
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("Total Leads", total_leads)
+        col2.metric("🔥 High Priority", high_priority)
+        col3.metric("✅ Qualified", qualified_leads)
+        col4.metric("📈 Avg Score", average_score)
+
+        st.divider()
+
+        # Lead table
+        st.subheader("📋 All Leads")
+
+        st.dataframe(
+            leads,
+            use_container_width=True
+        )
+
+    else:
+        st.info("No leads have been submitted yet.")
+
+except Exception as e:
+    st.error(f"Dashboard error: {e}")
