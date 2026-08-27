@@ -3,6 +3,7 @@ from supabase import create_client
 from google import genai
 import resend
 import json
+import pandas as pd
 
 # -------------------------
 # Page configuration
@@ -67,10 +68,7 @@ if submitted:
 
         try:
 
-            # -------------------------
-            # AI Qualification
-            # -------------------------
-
+            # AI qualification
             prompt = f"""
 You are an AI sales qualification assistant.
 
@@ -110,10 +108,7 @@ Rules:
             qualified = bool(ai_result["qualified"])
             ai_reason = ai_result["ai_reason"]
 
-            # -------------------------
-            # Save Lead
-            # -------------------------
-
+            # Save lead
             insert_response = (
                 supabase
                 .table("leads")
@@ -132,51 +127,34 @@ Rules:
                 .execute()
             )
 
-            # Get the exact lead ID
             lead_id = insert_response.data[0]["id"]
 
-            # -------------------------
-            # Email Notification
-            # -------------------------
-
+            # Send email for high priority
             notification_sent = False
 
             if priority == "High":
 
                 resend.Emails.send({
-
                     "from": "AI Sales CRM <onboarding@resend.dev>",
-
                     "to": [
                         st.secrets["SALES_TEAM_EMAIL"]
                     ],
-
                     "subject": f"🔥 High-Priority Lead: {company}",
-
                     "html": f"""
                     <h2>🔥 New High-Priority Lead</h2>
 
                     <p><strong>Name:</strong> {name}</p>
-
                     <p><strong>Email:</strong> {email}</p>
-
                     <p><strong>Company:</strong> {company}</p>
-
                     <p><strong>Lead Score:</strong> {score}/100</p>
-
                     <p><strong>Priority:</strong> {priority}</p>
-
-                    <p>
-                    <strong>Qualified:</strong>
-                    {"Yes" if qualified else "No"}
-                    </p>
+                    <p><strong>Qualified:</strong>
+                    {"Yes" if qualified else "No"}</p>
 
                     <h3>Lead Message</h3>
-
                     <p>{message}</p>
 
                     <h3>AI Reason</h3>
-
                     <p>{ai_reason}</p>
 
                     <p>
@@ -187,10 +165,7 @@ Rules:
 
                 notification_sent = True
 
-            # -------------------------
-            # Update Exact Lead
-            # -------------------------
-
+            # Update exact lead
             if notification_sent:
 
                 supabase.table("leads").update({
@@ -200,34 +175,26 @@ Rules:
                     lead_id
                 ).execute()
 
-            # -------------------------
-            # Display AI Result
-            # -------------------------
-
-            st.success(
-                "Lead submitted successfully! 🎉"
-            )
+            # Display result
+            st.success("Lead submitted successfully! 🎉")
 
             st.subheader("🤖 AI Qualification")
 
             col1, col2, col3 = st.columns(3)
 
             with col1:
-
                 st.metric(
                     "Lead Score",
                     f"{score}/100"
                 )
 
             with col2:
-
                 st.metric(
                     "Priority",
                     priority
                 )
 
             with col3:
-
                 st.metric(
                     "Qualified",
                     "Yes" if qualified else "No"
@@ -245,9 +212,7 @@ Rules:
 
         except Exception as e:
 
-            st.error(
-                f"Error: {e}"
-            )
+            st.error(f"Error: {e}")
 
 # =========================================================
 # CRM DASHBOARD
@@ -263,10 +228,7 @@ try:
         supabase
         .table("leads")
         .select("*")
-        .order(
-            "created_at",
-            desc=True
-        )
+        .order("created_at", desc=True)
         .execute()
     )
 
@@ -281,32 +243,27 @@ try:
         total_leads = len(leads)
 
         high_priority = sum(
-            1
-            for lead in leads
+            1 for lead in leads
             if lead.get("priority") == "High"
         )
 
         medium_priority = sum(
-            1
-            for lead in leads
+            1 for lead in leads
             if lead.get("priority") == "Medium"
         )
 
         low_priority = sum(
-            1
-            for lead in leads
+            1 for lead in leads
             if lead.get("priority") == "Low"
         )
 
         qualified_leads = sum(
-            1
-            for lead in leads
+            1 for lead in leads
             if lead.get("qualified") is True
         )
 
         notifications_sent = sum(
-            1
-            for lead in leads
+            1 for lead in leads
             if lead.get("notification_sent") is True
         )
 
@@ -317,39 +274,20 @@ try:
         ]
 
         average_score = (
-            round(
-                sum(scores) / len(scores),
-                1
-            )
-            if scores
-            else 0
+            round(sum(scores) / len(scores), 1)
+            if scores else 0
         )
 
         # -------------------------
-        # Main Metrics
+        # Main metrics
         # -------------------------
 
         col1, col2, col3, col4 = st.columns(4)
 
-        col1.metric(
-            "Total Leads",
-            total_leads
-        )
-
-        col2.metric(
-            "🔥 High Priority",
-            high_priority
-        )
-
-        col3.metric(
-            "✅ Qualified",
-            qualified_leads
-        )
-
-        col4.metric(
-            "📈 Avg Score",
-            average_score
-        )
+        col1.metric("Total Leads", total_leads)
+        col2.metric("🔥 High Priority", high_priority)
+        col3.metric("✅ Qualified", qualified_leads)
+        col4.metric("📈 Avg Score", average_score)
 
         st.divider()
 
@@ -361,24 +299,35 @@ try:
 
         col1, col2, col3 = st.columns(3)
 
-        col1.metric(
-            "🔥 High",
-            high_priority
-        )
-
-        col2.metric(
-            "🟡 Medium",
-            medium_priority
-        )
-
-        col3.metric(
-            "🟢 Low",
-            low_priority
-        )
+        col1.metric("🔥 High", high_priority)
+        col2.metric("🟡 Medium", medium_priority)
+        col3.metric("🟢 Low", low_priority)
 
         st.write(
-            f"📧 **Notifications Sent:** "
-            f"{notifications_sent}"
+            f"📧 **Notifications Sent:** {notifications_sent}"
+        )
+
+        # -------------------------
+        # Priority Chart
+        # -------------------------
+
+        st.subheader("📊 Lead Priority Distribution")
+
+        chart_data = pd.DataFrame({
+            "Priority": [
+                "High",
+                "Medium",
+                "Low"
+            ],
+            "Leads": [
+                high_priority,
+                medium_priority,
+                low_priority
+            ]
+        })
+
+        st.bar_chart(
+            chart_data.set_index("Priority")
         )
 
         st.divider()
@@ -406,8 +355,7 @@ try:
         else:
 
             filtered_leads = [
-                lead
-                for lead in leads
+                lead for lead in leads
                 if lead.get("priority")
                 == priority_filter
             ]
@@ -428,15 +376,10 @@ try:
             )
 
             if lead_priority == "High":
-
                 priority_icon = "🔥"
-
             elif lead_priority == "Medium":
-
                 priority_icon = "🟡"
-
             else:
-
                 priority_icon = "🟢"
 
             lead_name = lead.get(
@@ -490,9 +433,7 @@ try:
 
                     notification_status = (
                         "Sent 📧"
-                        if lead.get(
-                            "notification_sent"
-                        )
+                        if lead.get("notification_sent")
                         else "Not sent"
                     )
 
@@ -506,9 +447,7 @@ try:
                         f"{notification_status}"
                     )
 
-                st.write(
-                    "### 💬 Lead Message"
-                )
+                st.write("### 💬 Lead Message")
 
                 st.write(
                     lead.get(
@@ -517,9 +456,7 @@ try:
                     )
                 )
 
-                st.write(
-                    "### 🧠 AI Reason"
-                )
+                st.write("### 🧠 AI Reason")
 
                 st.info(
                     lead.get(
@@ -538,5 +475,4 @@ except Exception as e:
 
     st.error(
         f"Dashboard error: {e}"
-            )
-                
+)
