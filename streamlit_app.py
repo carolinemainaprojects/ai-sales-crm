@@ -40,6 +40,12 @@ with st.form("lead_form"):
 except Exception as e:
     st.error(f"Supabase error: {e}")
 
+    st.success("Lead inserted successfully!")
+    st.write(response)
+
+except Exception as e:
+    st.error(f"Supabase error: {e}")
+
                 st.success("Thank you! Your lead has been submitted.")
 
             except Exception as e:
