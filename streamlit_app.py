@@ -5,7 +5,8 @@ st.set_page_config(
     page_title="AI Sales CRM",
     page_icon="🤖"
 )
-
+st.write("Supabase URL:", st.secrets["SUPABASE_URL"])
+st.write("Key starts with:", st.secrets["SUPABASE_KEY"][:15])
 # Supabase connection
 supabase = create_client(
     st.secrets["SUPABASE_URL"],
