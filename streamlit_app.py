@@ -38,4 +38,4 @@ with st.form("lead_form"):
                 st.success("Thank you! Your lead has been submitted.")
 
             except Exception as e:
-                st.error("Something went wrong. Please try again.")
+    st.error(f"Supabase error: {e}")
