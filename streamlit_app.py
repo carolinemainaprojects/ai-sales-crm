@@ -12,7 +12,8 @@ supabase = create_client(
     st.secrets["SUPABASE_URL"],
     st.secrets["SUPABASE_KEY"]
 )
-
+st.write("Connected to:", st.secrets["SUPABASE_URL"])
+st.write("Key type:", st.secrets["SUPABASE_KEY"][:15])
 # Page title
 st.title("🤖 AI Sales CRM")
 st.write("Submit your details and our team will get back to you.")
