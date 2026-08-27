@@ -27,12 +27,18 @@ with st.form("lead_form"):
             st.warning("Please fill in your name, email, and message.")
         else:
             try:
-                supabase.table("leads").insert({
-                    "name": name,
-                    "email": email,
-                    "company": company,
-                    "message": message
-                }).execute()
+    response = supabase.table("leads").insert({
+        "name": name,
+        "email": email,
+        "company": company,
+        "message": message
+    }).execute()
+
+    st.success("Lead inserted successfully!")
+    st.write(response)
+
+except Exception as e:
+    st.error(f"Supabase error: {e}")
 
                 st.success("Thank you! Your lead has been submitted.")
 
