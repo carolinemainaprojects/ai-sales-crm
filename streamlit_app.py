@@ -6,7 +6,6 @@ st.set_page_config(
     page_icon="🤖"
 )
 
-# Connect to Supabase
 supabase = create_client(
     st.secrets["SUPABASE_URL"],
     st.secrets["SUPABASE_KEY"]
@@ -38,4 +37,4 @@ with st.form("lead_form"):
                 st.success("Thank you! Your lead has been submitted.")
 
             except Exception as e:
-    st.error(f"Supabase error: {e}")
+                st.error(f"Supabase error: {e}")
