@@ -170,15 +170,17 @@ Instead of manually reviewing every incoming lead, the system automatically anal
 
 Possible future improvements include:
 
-* Slack notifications
 * Duplicate lead detection
 * CRM integrations such as HubSpot
 * Lead assignment to individual sales representatives
-* Follow-up reminders
-* Authentication for sales users
-* Advanced analytics
+* Automated follow-up reminders
+* Authentication and role-based access for sales users
+* Advanced sales analytics and reporting
 * Lead conversion tracking
-* AI-generated follow-up emails
+* AI-generated personalized follow-up emails
+* Multi-channel notifications such as SMS or WhatsApp
+* 
+
 
 ## 👩🏽‍💻 Author
 
@@ -187,7 +189,7 @@ Possible future improvements include:
 AI Automation & Generative AI Projects
 
 GitHub: `carolinemainaprojects`
-
+Caroline Maina on LinkedIn
 ```
 ```
 # ai-sales-crm
