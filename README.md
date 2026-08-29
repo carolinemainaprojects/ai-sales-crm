@@ -92,7 +92,9 @@ The system was tested using different lead scenarios:
 | Kevin Njoroge | 15/100 | Low      | No        |
 
 This demonstrates that the AI can differentiate leads based on intent, urgency, business need, and readiness to purchase.
+## 📸 Application Screenshot
 
+![AI Sales CRM Assistant](Screenshot_2026-08-30-00-38-18-86_40deb401b9ffe8e1df2f1cc5ba480b12.jpg)
 ## 🛠️ Technologies
 
 * Python
